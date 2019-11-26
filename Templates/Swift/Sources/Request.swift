@@ -69,7 +69,17 @@ extension {{ options.name }}{% if tag %}.{{ options.tagPrefix }}{{ tag|upperCame
                 {% if nonBodyParams %}
                 self.options = options
                 {% endif %}
-                super.init(service: {{ type }}.service){% if body %} {
+                {% if body and isForm %}
+
+                var params: [String: Any] = [:]
+                let jsonEncoder = JSONEncoder()
+                jsonEncoder.dateEncodingStrategy = .formatted(SwaggerClientAPI.dateEncodingFormatter)
+                if let jsonData = try? jsonEncoder.encode({% if body.isAnyType %}AnyCodable({{ body.name }}).value{% else %}{{ body.name }}{% endif %}) {
+                    params = ((try? JSONSerialization.jsonObject(with: jsonData, options: [])) as? [String: Any]) ?? [:]
+                }
+
+                {% endif %}
+                super.init(service: service{% if body and isForm %}, formParameters: params{% endif %}){% if body and not isForm %} {
                     let jsonEncoder = JSONEncoder()
                     jsonEncoder.dateEncodingStrategy = .formatted(SwaggerClientAPI.dateEncodingFormatter)
                     return try jsonEncoder.encode({% if body.isAnyType %}AnyCodable({{ body.name }}).value{% else %}{{ body.name }}{% endif %})

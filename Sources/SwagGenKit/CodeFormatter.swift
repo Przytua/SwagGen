@@ -293,8 +293,10 @@ public class CodeFormatter {
                 context["bodyProperties"] = schema.properties.map(getPropertyContext)
             }
             if let formSchema = requestBody.value.content.formSchema ?? requestBody.value.content.multipartFormSchema {
+                context["body"] = getRequestBodyContext(requestBody)
                 formProperties = formSchema.properties.map(getPropertyContext)
                 context["isUpload"] = formSchema.properties.contains { $0.schema.isFile }
+                context["isForm"] = true
             }
         }
         context["requestSchemas"] = requestSchemas
@@ -421,7 +423,7 @@ public class CodeFormatter {
 
         context["required"] = property.required
         context["optional"] = !property.required || property.schema.metadata.nullable
-        context["name"] = propertyNames[property.name] ?? getName(property.name)      
+        context["name"] = propertyNames[property.name] ?? getName(property.name)
         context["value"] = property.name
         context["type"] = getSchemaType(name: property.name, schema: property.schema)
 
