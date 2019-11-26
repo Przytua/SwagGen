@@ -50,7 +50,7 @@ public struct APIResponse<T: Decodable> {
     /// The timeline of the complete lifecycle of the request.
     public let timeline: Timeline?
 
-    init(request: APIRequest<T>, result: APIResult<T>, urlRequest: URLRequest? = nil, urlResponse: HTTPURLResponse? = nil, data: Data? = nil, timeline: Timeline? = nil) {
+    public init(request: APIRequest<T>, result: APIResult<T>, urlRequest: URLRequest? = nil, urlResponse: HTTPURLResponse? = nil, data: Data? = nil, timeline: Timeline? = nil) {
         self.request = request
         self.result = result
         self.urlRequest = urlRequest

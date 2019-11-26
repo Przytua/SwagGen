@@ -3,10 +3,29 @@
 import Foundation
 import Alamofire
 
-/// Manages and sends APIRequests
-public class APIClient {
+public protocol APIRequesting {
 
-    public static var `default` = APIClient(baseURL: {% if options.baseURL %}"{{ options.baseURL }}"{% elif defaultServer %}APIServer.{{ defaultServer.name }}{% else %}""{% endif %})
+    var behaviours: [RequestBehaviour] { get set }
+
+    @discardableResult
+    func makeRequest<T>(_ request: APIRequest<T>, complete: @escaping (APIResponse<T>) -> Void) -> CancellableRequest?
+
+    @discardableResult
+    func makeRequest<T>(_ request: APIRequest<T>, behaviours: [RequestBehaviour], completionQueue: DispatchQueue, complete: @escaping (APIResponse<T>) -> Void) -> CancellableRequest?
+}
+
+public extension APIRequesting {
+
+    @discardableResult
+    func makeRequest<T>(_ request: APIRequest<T>, complete: @escaping (APIResponse<T>) -> Void) -> CancellableRequest? {
+        return makeRequest(request, behaviours: [], completionQueue: DispatchQueue.main, complete: complete)
+    }
+}
+
+/// Manages and sends APIRequests
+public class APIClient: APIRequesting {
+
+    public static var `default`: APIRequesting?
 
     /// A list of RequestBehaviours that can be used to monitor and alter all requests
     public var behaviours: [RequestBehaviour] = []
@@ -189,7 +208,7 @@ public class CancellableRequest {
     /// The request used to make the actual network request
     public let request: APIRequestProtocol
 
-    init(request: APIRequestProtocol) {
+    public init(request: APIRequestProtocol) {
         self.request = request
     }
     var networkRequest: Request?
@@ -207,7 +226,7 @@ extension APIRequest {
 
     /// makes a request using the default APIClient. Change your baseURL in APIClient.default.baseURL
     public func makeRequest(complete: @escaping (APIResponse<ResponseType>) -> Void) {
-        APIClient.default.makeRequest(self, complete: complete)
+        APIClient.default?.makeRequest(self, complete: complete)
     }
 }
 
