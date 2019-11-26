@@ -67,6 +67,7 @@ public final class {{ type }}Request: APIRequest<{{ successType|default:"APIEmpt
         let service = APIService<{{ successType|default:"APIEmptyResponseValue"}}>(id: "{{ operationId }}", tag: "{{ tag }}", method: "{{ method|uppercase }}", path: "{{ path }}", hasBody: {% if hasBody %}true{% else %}false{% endif %}{% if isUpload %}, isUpload: true{% endif %}{% if securityRequirement %}, securityRequirement: SecurityRequirement(type: "{{ securityRequirement.name }}", scopes: [{% for scope in securityRequirement.scopes %}"{{ scope }}"{% ifnot forloop.last %}, {% endif %}{% endfor %}]){% endif %})
         super.init(service: service){% if body %} {
             let jsonEncoder = JSONEncoder()
+            jsonEncoder.dateEncodingStrategy = .formatted(SwaggerClientAPI.dateEncodingFormatter)
             return try jsonEncoder.encode({% if body.isAnyType %}AnyCodable({{ body.name }}).value{% else %}{{ body.name }}{% endif %})
         }{% endif %}
     }

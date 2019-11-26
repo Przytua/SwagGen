@@ -71,6 +71,7 @@ extension {{ options.name }}{% if tag %}.{{ options.tagPrefix }}{{ tag|upperCame
                 {% endif %}
                 super.init(service: {{ type }}.service){% if body %} {
                     let jsonEncoder = JSONEncoder()
+                    jsonEncoder.dateEncodingStrategy = .formatted(SwaggerClientAPI.dateEncodingFormatter)
                     return try jsonEncoder.encode({% if body.isAnyType %}AnyCodable({{ body.name }}).value{% else %}{{ body.name }}{% endif %})
                 }{% endif %}
             }

@@ -15,6 +15,8 @@ public struct {{ options.name }} {
 
     /// Used to encode Dates when uses as string params
     public static let dateEncodingFormatter = DateFormatter(formatString: "yyyy-MM-dd'T'HH:mm:ssZZZZZ")
+    public static let dateEncodingStrategy = JSONEncoder.DateEncodingStrategy.formatted(SwaggerClientAPI.dateEncodingFormatter)
+    public static let dateDecodingStrategy = JSONDecoder.DateDecodingStrategy.formatted(SwaggerClientAPI.dateEncodingFormatter)
 
     {% if info.version %}
     public static let version = "{{ info.version }}"
