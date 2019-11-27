@@ -193,13 +193,6 @@ public class CodeFormatter {
                 let references = groupSchema.schemas.compactMap { $0.type.reference }
                 var discriminatorTypeContext = Context()
 
-                func getReferenceContext<T>(_ reference: Reference<T>) -> Context {
-                    var context: Context = [:]
-                    context["type"] = getModelType(reference.name)
-                    context["name"] = getName(reference.name)
-                    return context
-                }
-
                 discriminatorTypeContext["subTypes"] = references.map(getReferenceContext)
                 var mapping: [String: Context] = [:]
                 for reference in references {
@@ -208,7 +201,7 @@ public class CodeFormatter {
                 if let discriminatorMapping = groupSchema.discriminator?.mapping {
                     for (key, value) in discriminatorMapping {
                         // TODO: could reference another spec
-                        let reference = Reference<Schema>(value)
+                        guard case let SchemaType.reference(reference) = value.type else { continue }
                         mapping[key] = getReferenceContext(reference)
                     }
                 }
@@ -218,9 +211,32 @@ public class CodeFormatter {
                 context["discriminatorType"] = discriminatorTypeContext
             case .all: break
             }
+        case let .object(objectSchema):
+            guard objectSchema.discriminator?.propertyName.isEmpty == false else { break }
+            var discriminatorTypeContext = Context()
+
+            var mapping: [String: Context] = [:]
+            if let discriminatorMapping = objectSchema.discriminator?.mapping {
+                for (key, value) in discriminatorMapping {
+                    guard case let SchemaType.reference(reference) = value.type else { continue }
+                    mapping[key] = getReferenceContext(reference)
+                }
+            }
+            discriminatorTypeContext["discriminatorProperty"] = objectSchema.discriminator?.propertyName
+            discriminatorTypeContext["mapping"] = mapping
+
+            context["discriminatorType"] = discriminatorTypeContext
+            context["objectType"] = true
         default: break
         }
 
+        return context
+    }
+
+    func getReferenceContext<T>(_ reference: Reference<T>) -> Context {
+        var context: Context = [:]
+        context["type"] = getModelType(reference.name)
+        context["name"] = getName(reference.name)
         return context
     }
 

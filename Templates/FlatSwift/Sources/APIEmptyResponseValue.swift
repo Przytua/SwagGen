@@ -2,4 +2,4 @@
 
 import Foundation
 
-public struct APIEmptyResponseValue: Decodable {}
+public struct APIEmptyResponseValue: APIModel {}

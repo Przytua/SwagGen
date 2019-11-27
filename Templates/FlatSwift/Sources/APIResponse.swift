@@ -30,7 +30,7 @@ public enum APIResponseResult<SuccessType, FailureType>: CustomStringConvertible
     }
 }
 
-public struct APIResponse<T: Decodable> {
+public struct APIResponse<T: APIDecodable> {
 
     /// The APIRequest used for this response
     public let request: APIRequest<T>

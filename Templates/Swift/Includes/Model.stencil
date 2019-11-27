@@ -7,7 +7,7 @@
 public typealias {{ type }} = {{ aliasType }}
 {% elif additionalPropertiesType and allProperties.count == 0 %}
 public typealias {{ type }} = [String: {{ additionalPropertiesType }}]
-{% elif discriminatorType %}
+{% elif discriminatorType and not objectType %}
 public enum {{ type }}: Codable, Equatable {
     {% for subType in discriminatorType.subTypes %}
     case {{ subType.name}}({{ subType.type }})
@@ -48,7 +48,7 @@ public enum {{ type }}: Codable, Equatable {
     }
 }
 {% else %}
-public {{ options.modelType }} {{ type }}: {% if parent %}{{ parent.type }}{% else %}{% if options.modelProtocol %}{{ options.modelProtocol }}{% else %}Codable, Equatable{% endif %}{% endif %} {
+public {{ options.modelType }} {{ type }}: {% if parent %}{{ parent.type }}{% else %}{% if options.modelProtocol %}{{ options.modelProtocol }}{% else %}Codable, Equatable, APIDecodable{% endif %}{% endif %} {
     {% for enum in enums %}
     {% if not enum.isGlobal %}
 
@@ -169,6 +169,35 @@ public {{ options.modelType }} {{ type }}: {% if parent %}{{ parent.type }}{% el
     public static func == (lhs: {{ type }}, rhs: {{ type }}) -> Bool {
         return lhs.isEqual(to: rhs)
     }
+
+    {% if discriminatorType %}
+    public static func decode(from data: Data, with decoder: JSONDecoder) throws -> Self {
+        guard let jsonDictionary = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return try decoder.decode(self, from: data)
+        }
+        let discriminatorPropertyName = "{{ discriminatorType.discriminatorProperty }}"
+        guard let discriminator: String = jsonDictionary[discriminatorPropertyName] as? String else {
+            return try decoder.decode(self, from: data)
+        }
+        let item: {{ type }}
+        switch discriminator {
+        {% for name, subType in discriminatorType.mapping %}
+        case "{{ name }}":
+            item = try decoder.decode({{ subType.type }}.self, from: data)
+        {% endfor %}
+        default:
+            return try decoder.decode(self, from: data)
+        }
+        guard let returnItem = item as? Self else {
+            return try decoder.decode(self, from: data)
+        }
+        return returnItem
+    }
+    {% else %}
+    public static func decode(from data: Data, with decoder: JSONDecoder) throws -> Self {
+        return try decoder.decode(self, from: data)
+    }
+    {% endif %}
     {% endif %}
     {% endif %}
 }

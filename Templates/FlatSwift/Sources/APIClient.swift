@@ -169,7 +169,7 @@ public class APIClient: APIRequesting {
             switch statusCode {
             case 200 ..< 300:
                 do {
-                    let decoded = try jsonDecoder.decode(T.self, from: value)
+                    let decoded = try T.decode(from: value, with: jsonDecoder)
                     result = .success(decoded)
                     requestBehaviour.onSuccess(result: decoded as Any)
                 } catch let error {

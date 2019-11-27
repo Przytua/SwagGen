@@ -8,6 +8,11 @@ public struct Schema {
         self.metadata = metadata
         self.type = type
     }
+
+    public init(withSchemaReferenceName referenceName: String) {
+        metadata = Metadata()
+        type = .reference(Reference(referenceName))
+    }
 }
 
 public enum SchemaType {

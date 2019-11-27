@@ -12,7 +12,7 @@ public protocol APIRequestProtocol {
     var path: String { get }
 }
 
-public class APIRequest<ResponseType: Decodable>: APIRequestProtocol {
+public class APIRequest<ResponseType: APIDecodable>: APIRequestProtocol {
 
     public let service: APIService<ResponseType>
     public private(set) var queryParameters: [String: Any]

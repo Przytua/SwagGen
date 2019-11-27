@@ -2,8 +2,13 @@
 
 import Foundation
 
+public protocol APIDecodable {
+
+    static func decode(from data: Data, with decoder: JSONDecoder) throws -> Self
+}
+
 {% if options.modelProtocol %}
-public protocol {{ options.modelProtocol }}: Codable, Equatable { }
+public protocol {{ options.modelProtocol }}: Codable, Equatable, APIDecodable { }
 {% endif %}
 
 {% for type, typealias in options.typeAliases %}
@@ -21,12 +26,37 @@ extension {{ options.modelProtocol }} {
     func encode() -> [String: Any] {
         guard
             let jsonData = try? JSONEncoder().encode(self),
-            let jsonDictionary = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any] else {
+            let jsonDictionary = (try? JSONSerialization.jsonObject(with: jsonData)) as? [String: Any] else {
                 return [:]
         }
-        return jsonDictionary ?? [:]
+        return jsonDictionary
     }
 }
+
+extension Array: APIDecodable where Element: APIDecodable {
+
+    public static func decode(from data: Data, with decoder: JSONDecoder) throws -> Self {
+        guard let jsonArray = try JSONSerialization.jsonObject(with: data) as? [Any] else {
+            return []
+        }
+        var itemsArray = Self()
+        for jsonItem in jsonArray {
+            let itemData = try JSONSerialization.data(withJSONObject: jsonItem)
+            let item = try Element.decode(from: itemData, with: decoder)
+            itemsArray.append(item)
+        }
+        return itemsArray
+    }
+}
+{% if options.modelProtocol %}
+
+extension APIModel {
+
+    public static func decode(from data: Data, with decoder: JSONDecoder) throws -> Self {
+        return try decoder.decode(self, from: data)
+    }
+}
+{% endif %}
 
 struct StringCodingKey: CodingKey, ExpressibleByStringLiteral {
 

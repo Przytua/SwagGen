@@ -39,7 +39,11 @@ extension Content: JSONObjectConvertible {
         var mediaItems: [String: MediaItem] = [:]
         for key in jsonDictionary.keys {
             let mediaItem: MediaItem = try jsonDictionary.json(atKeyPath: .key(key))
-            mediaItems[key] = mediaItem
+            guard let normalizedKey = key.split(separator: ";").first else {
+                mediaItems[key] = mediaItem
+                continue
+            }
+            mediaItems[String(normalizedKey)] = mediaItem
         }
         self.mediaItems = mediaItems
     }
